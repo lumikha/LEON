@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <title>ypScraper</title>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+      <style>
+          input {
+            margin-bottom: 4px;
+          }
+
+        pre {
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+        }
+      </style>
+  </head>
+  <body>
+    <div class="container">
+            {% csrf_token %}
+        <div style="margin-top: 30px;">
+            {% load static %}
+            <!--<img src="{% static 'img/sample.jpg' %}" alt="My image"/>-->
+
+            <div class="col-sm-4">
+                <input type="text" name="ctgry" id="ctgry" class="form-control" value="Salon" placeholder="Category">
+                <input type="text" name="location" id="location" class="form-control" value="Los Angeles, CA" placeholder="Location">
+                <br><br>
+                <input type="text" name="pagesCnt" id="pagesCnt" class="form-control" value="2" placeholder="How many pages?">
+                <br>
+                <center>
+                    <pre id="errormsg" style="background-color: transparent; border: none;"></pre>
+                </center>
+                <center>
+                    <button type="submit" id="submitbtn" class="btn btn-default">Submit</button>
+                </center>
+            </div>
+            <div class="col-sm-8">
+                <div style="width: 100%; height: 100px; background-color: #e6e6e6; margin-bottom: 5px;">
+                    <pre id="data" style="background-color: transparent; border: none;"></pre>
+                </div>
+                <div id="allprocessdiv" style="width: 100%; height: 400px; background-color: #e6e6e6; overflow-y: scroll;">
+                    <pre id="dataprocess" style="background-color: transparent; border: none;"></pre>
+                </div>
+                <div style="margin-top: 30px;">
+                    <a href="" id="dlcreatedfile" download style="display: none;">Download .csv file</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var filecontentlength;
+            document.getElementById('data').innerHTML = "Leon is on standby...";
+            //samplereadfile("{% static 'createdFiles/1484194716084.txt' %}");
+        });
+
+        $("#submitbtn").click(function () {
+            var c = $("#ctgry").val(),
+                d = $("#location").val(),
+                p = $("#pagesCnt").val(),
+                goodToGo = true;
+
+            if(!c || !c.length) {
+                goodToGo = false;
+            }
+
+            if(!d || !d.length) {
+                goodToGo = false;
+            }
+
+            if(!p || !p.length) {
+                goodToGo = false;
+            }
+
+            if(goodToGo == true) {
+                var datenowfilename = Date.now();
+
+                readTextFile("{% static 'createdFiles/' %}"+datenowfilename+".txt");         
+
+                $("#data").text("Processing request...");
+                $.ajax({
+                    url: '/ajax/ini_scrape/',
+                    dataType: 'json',
+                    data: {
+                        'ctgry': c,
+                        'location': d,
+                        'pagesCnt': p,
+                        'filelog': datenowfilename
+                    },
+                    success: function (data) {
+                        /*$("#data").text("Category: " + data['f1'] + "\nLocation: " + data['f2'] + "\nNumber of Pages: " + data['f3']);*/
+                        /*$("#data").text(data['f4']);*/
+                        $("#data").text("Leon created file "+data['f4']+".csv for you! ^_^\nDownload link generated below.");
+                        $("#dlcreatedfile").attr("href", "{% static 'createdFiles/' %}"+data['f4']+".csv")
+                        $("#dlcreatedfile").css("display", "block");
+                    },
+                });
+            } else {
+                $("#errormsg").text("Please complete the form.");
+            }
+        });
+
+        function readTextFile(file)
+        {
+            setInterval(function() {
+                var rawFile = new XMLHttpRequest();
+                var elem = document.getElementById('allprocessdiv');
+
+                rawFile.open("GET", file, false);
+                rawFile.onreadystatechange = function ()
+                {
+                    if(rawFile.readyState === 4)
+                    {
+                        if(rawFile.status === 200 || rawFile.status == 0)
+                        {
+                            var allText = rawFile.responseText;
+                            document.getElementById('dataprocess').innerHTML = allText;
+                            elem.scrollTop = elem.scrollHeight;
+                            $('#allprocessdiv')[0].scrollIntoView(false);
+
+                            if(filecontentlength == allText.length) {
+                                alert("same");
+                            } else {
+                                filecontentlength = allText.length;
+                                alert("not same");
+                            }
+                        }
+                    }
+                }
+                rawFile.send(null);
+            }, 3000);
+        }
+
+        function samplereadfile(file) {
+            var rawFile = new XMLHttpRequest();
+            var elem = document.getElementById('allprocessdiv');
+
+                rawFile.open("GET", file, false);
+                rawFile.onreadystatechange = function ()
+                {
+                    if(rawFile.readyState === 4)
+                    {
+                        if(rawFile.status === 200 || rawFile.status == 0)
+                        {
+                            var allText = rawFile.responseText;
+                            document.getElementById('dataprocess').innerHTML = allText;
+                            elem.scrollTop = elem.scrollHeight;
+                            $('#allprocessdiv')[0].scrollIntoView(false);
+
+                            
+                        }
+                    }
+                }
+                rawFile.send(null);
+        }
+    </script>
+</body>
+</html>
