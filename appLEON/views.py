@@ -14,15 +14,11 @@ def index(request):
     return render(request, 'index.html', context=None)
 
 def ini_scrape(request):
+    pagesScraped = 0;
     ctg = request.GET.get('ctgry', None)
     loc = request.GET.get('location', None)
     maxPageCnt = request.GET.get('pagesCnt', None)
     filelogname = request.GET.get('filelog', None)
-
-    millis = int(round(time.time() * 1000))
-    dataName1 = ctg.replace(" ", "")
-    dataName2 = loc.replace(" ", "")
-    dataNameFin = dataName1 + "-" + dataName2
 
     if maxPageCnt == '':
         maxPageCnt = 1
@@ -63,6 +59,11 @@ def ini_scrape(request):
 
             conn = run_conn_server
 
+            #for checking request respons
+            #with open('static/responsesHTML/' + str(page) + '.html', 'w', newline='') as html_file:
+            #    html_file.write(run_conn_server)
+            #end here
+
             for search_result in conn.findAll('div', {'class': 'search-results organic'}):
                 for one_vcard in search_result.findAll('div', {'class': 'v-card'}):
                     for info_this_vcard in one_vcard.findAll('div', {'class': 'info'}):
@@ -71,7 +72,6 @@ def ini_scrape(request):
                                 for list_number in info_this_vcard.findAll('h3', {'class': 'n'}):
                                     lnumber = list_number.text
                                     print(lnumber)
-                                    appendnewlog(lnumber+"\n")
                                 for info in info_this_vcard.findAll('a', {'class': 'business-name'}):
                                     bname = info.text
                                     # print(bname)
@@ -119,12 +119,15 @@ def ini_scrape(request):
                             else:
                                 print("[Error getting secondary info]")
 
+
                             with open('static/createdFiles/' + filelogname + '.csv', 'a', newline='') as f:
                                 writer = csv.writer(f)
                                 newdatarow = [
                                     [bname, address, phoneNo, company_site_url, yp_page_url]
                                 ]
                                 writer.writerows(newdatarow)
+
+                            appendnewlog(lnumber+"\n")
 
                         except (AttributeError, KeyError):
                             print("Error: Check class name")
@@ -140,6 +143,7 @@ def ini_scrape(request):
                 else:
                     print(" \nDONE!!!")
                     appendnewlog(" \nDONE!!!")
+                    pagesScraped = page
                     sys.exit()
 
             page += 1
@@ -157,25 +161,8 @@ def ini_scrape(request):
 
         proxy_list = [
             "97.77.104.22:3128",
-            # "70.248.28.23:800",
-            # "37.187.79.19:3128",
-            # "200.143.224.197:80",
-            # "192.95.46.200:3128",
-            # "158.69.133.22:8080",
-            # "12.33.254.195:3128",
-            # "94.177.160.72:65000",
-            # "103.41.23.146:8080",
-            # "182.74.243.45:3128",
-            # "200.68.27.100:3128",
-            # "185.28.193.95:8080",
-            # "182.74.243.47:3128",
-            # "52.164.244.34:8080",
-            # "150.161.21.174	8080",
-            # "182.74.243.44	3128",
-            # "79.172.0.198:8080",
-            "37.187.100.23:3128",
-            # "64.140.171.218:80",
-            # "5.135.202.50:3128",
+            "200.68.27.100:3128",
+            "185.28.193.95:8080",
         ]
 
         user_agent_list = [
@@ -192,7 +179,6 @@ def ini_scrape(request):
             "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36",
             "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0",
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko",
             "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0",
             "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36",
             "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36",
@@ -211,7 +197,6 @@ def ini_scrape(request):
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36",
             "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36",
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko",
             "Mozilla/5.0 (Windows NT 6.1; rv:50.0) Gecko/20100101 Firefox/50.0",
             "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36",
@@ -220,7 +205,6 @@ def ini_scrape(request):
             "Mozilla/5.0 (X11; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/602.2.14 (KHTML, like Gecko) Version/10.0.1 Safari/602.2.14",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:50.0) Gecko/20100101 Firefox/50.0",
-            "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0;  Trident/5.0)",
             "Mozilla/5.0 (iPad; CPU OS 10_1_1 like Mac OS X) AppleWebKit/602.2.14 (KHTML, like Gecko) Version/10.0 Mobile/14B100 Safari/602.1",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36",
@@ -232,8 +216,6 @@ def ini_scrape(request):
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36",
             "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/601.7.7 (KHTML, like Gecko) Version/9.1.2 Safari/601.7.7",
-            "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0;  Trident/5.0)",
-            "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko",
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36",
             "Mozilla/5.0 (iPhone; CPU iPhone OS 10_1_1 like Mac OS X) AppleWebKit/602.2.14 (KHTML, like Gecko) Version/10.0 Mobile/14B100 Safari/602.1",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586",
@@ -256,7 +238,6 @@ def ini_scrape(request):
             "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36",
             "Mozilla/5.0 (Windows NT 6.1; rv:49.0) Gecko/20100101 Firefox/49.0",
-            "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:49.0) Gecko/20100101 Firefox/49.0",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36",
@@ -267,7 +248,6 @@ def ini_scrape(request):
             "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0",
             "Mozilla/5.0 (iPad; CPU OS 9_3_5 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13G36 Safari/601.1",
             "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko",
             "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0",
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.59 Safari/537.36"
         ]
@@ -288,14 +268,21 @@ def ini_scrape(request):
             while (response == ''):
                 response = requests.get(u, headers=h, proxies=p, timeout=20)
                 if response == '':
-                    print("Something is went wrong! No response returned.")
-                    appendnewlog("Something is went wrong! No response returned.")
+                    print("\nSomething went wrong! No response returned.")
+                    appendnewlog("\nSomething went wrong! No response returned.")
+                    return False
 
             soup = BeautifulSoup(response.text, "lxml")
-            if soup.find('body', {'id': 'ERR_ACCESS_DENIED'}):
+            if soup.find('body', {'id': 'ERR_ACCESS_DENIED'}): #proxy server specific error
                 print("\n")
                 print("SQUID: Error - The requested URL could not be retrieved")
                 appendnewlog("\nSQUID: Error - The requested URL could not be retrieved")
+                time.sleep(2)
+                return False
+            elif soup.find('body', {'id': 'upgrade-browser'}): #yellowpage specific error
+                print("\n")
+                print("YP detects that User Agent "+h+" is outdated")
+                appendnewlog("\nYP detects that User Agent "+h+" is outdated")
                 time.sleep(2)
                 return False
             else:
@@ -367,7 +354,7 @@ def ini_scrape(request):
     data = {
         'f1': ctg,
         'f2': loc,
-        'f3': maxPageCnt,
+        'f3': pagesScraped,
         'f4': filelogname
     }
     return JsonResponse(data)
